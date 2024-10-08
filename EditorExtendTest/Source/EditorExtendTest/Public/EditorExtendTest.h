@@ -5,13 +5,15 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FMyPluginsModule : public IModuleInterface
+class FEditorExtendTestModule : public IModuleInterface
 {
 public:
+
+	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 
 private:
-	void AddSubMenus(FMenuBuilder& MenuBuilder);
+	void AddSubMenus(FMenuBuilder& Builder);
 	void MenuCallback();
 };

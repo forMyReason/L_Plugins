@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class MyPlugins : ModuleRules
+public class EditorExtendTest : ModuleRules
 {
-	public MyPlugins(ReadOnlyTargetRules Target) : base(Target)
+	public EditorExtendTest(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -25,7 +25,7 @@ public class MyPlugins : ModuleRules
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+			    "Core",
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -34,9 +34,9 @@ public class MyPlugins : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"CoreUObject",
-				"Engine",
-				"Slate",
+                "CoreUObject",
+                "Engine",
+                "Slate",
 				"SlateCore",
 				// ... add private dependencies that you statically link with here ...	
 			}
