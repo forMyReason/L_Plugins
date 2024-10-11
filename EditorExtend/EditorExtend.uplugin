@@ -16,7 +16,7 @@
 	"Installed": false,
 	"Modules": [
 		{
-			"Name": "EditorExtendTest",
+			"Name": "EditorExtend",
 			"Type": "Runtime",
 			"LoadingPhase": "Default"
 		}

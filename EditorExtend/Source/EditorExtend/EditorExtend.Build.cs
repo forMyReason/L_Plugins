@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class EditorExtendTest : ModuleRules
+public class EditorExtend : ModuleRules
 {
-	public EditorExtendTest(ReadOnlyTargetRules Target) : base(Target)
+	public EditorExtend(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
@@ -34,6 +34,11 @@ public class EditorExtendTest : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+                "Projects",
+                "InputCore",
+                "EditorFramework",
+                "UnrealEd",
+                "ToolMenus",
                 "CoreUObject",
                 "Engine",
                 "Slate",

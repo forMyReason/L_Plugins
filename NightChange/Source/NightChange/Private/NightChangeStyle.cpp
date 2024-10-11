@@ -44,6 +44,7 @@ TSharedRef< FSlateStyleSet > FNightChangeStyle::Create()
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("NightChange")->GetBaseDir() / TEXT("Resources"));
 
 	Style->Set("NightChange.PluginAction", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon20x20));
+	Style->Set("NightChange.PluginAction", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon20x20));
 	return Style;
 }
 

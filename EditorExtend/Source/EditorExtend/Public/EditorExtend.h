@@ -5,7 +5,7 @@
 #include "CoreMinimal.h"
 #include "Modules/ModuleManager.h"
 
-class FEditorExtendTestModule : public IModuleInterface
+class FEditorExtendModule : public IModuleInterface
 {
 public:
 
@@ -16,4 +16,12 @@ public:
 private:
 	void AddSubMenus(FMenuBuilder& Builder);
 	void MenuCallback();
+	void BindCommands();
+	void LOG_Warning_Action_1();
+	void LOG_Warning_Action_2();
+	void AddMenuBarExtension(FMenuBarBuilder& Builder);
+	void MenuBarPullDown(FMenuBuilder& Builder);
+
+private:
+	TSharedPtr<class FUICommandList> PluginCommands;
 };
