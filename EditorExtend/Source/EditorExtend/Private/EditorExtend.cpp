@@ -7,6 +7,7 @@
 #include "Misc/MessageDialog.h"
 #include "Modules/ModuleManager.h"
 #include "Components/StaticMeshComponent.h"
+#include "ToolMenus.h"
 
 #define LOCTEXT_NAMESPACE "FEditorExtendModule"
 
@@ -19,18 +20,22 @@ void FEditorExtendModule::StartupModule()
 
 	BindCommands();
 
+	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this,&FEditorExtendModule::RegisterMenus));
+
 	// MenuExtender
 	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
-	MenuExtender->AddMenuExtension("EditHistory", EExtensionHook::After, NULL, FMenuExtensionDelegate::CreateLambda([this](FMenuBuilder& Builder)
+	MenuExtender->AddMenuExtension("LevelEditor", EExtensionHook::After, NULL, FMenuExtensionDelegate::CreateLambda([this](FMenuBuilder& Builder)
 		{
-			Builder.BeginSection("CustomMenu");
+			//第一个参数是分隔栏的Hook名，第二参数是分隔栏的显示名称
+			Builder.BeginSection("CustomSection", LOCTEXT("CustomArea", "CustomArea"));
 			Builder.AddMenuEntry(
 				FText::FromString("Menu1"),
 				FText::FromString("This is Menu1"),
 				FSlateIcon(),
 				FUIAction(FExecuteAction::CreateRaw(this, &FEditorExtendModule::MenuCallback))
 			);
-
+			//创建简单的分割线
+			Builder.AddMenuSeparator("SeparatorHook_Name");
 			Builder.AddSubMenu(
 				FText::FromString("Menu2"),
 				FText::FromString("this is menu2"),
@@ -47,12 +52,29 @@ void FEditorExtendModule::StartupModule()
 	// this：指向当前FEditorExtendModule实例的指针
 	// &FEditorExtendModule::AddMenuBarExtension：指向成员函数的指针，用于相应菜单扩展
 
-
+	// ToolBarExtender
+	// TODO：这里的代码没有跑通，所以对于ToolBarMenu，可采用UToolMenu / 新建EditorToolBarButton插件来创建
+	// TSharedPtr<FExtender> ToolBarExtender = MakeShareable(new FExtender());
+	// ToolBarExtender->AddToolBarExtension("File",EExtensionHook::Before,PluginCommands,FToolBarExtensionDelegate::CreateRaw(this,&FEditorExtendModule::AddToolBarExtension));
+	// LevelEditorModule.GetToolBarExtensibilityManager()->AddExtender(ToolBarExtender);
+	
 	// 加载LevelEditor模块：通过指定模块名字来加载模块
 	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
-	// 将菜单添加到LevelEditorModule
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuBarExtender);
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
+
+	
+	// Outline和viewport右键菜单拓展
+	auto& LVCMExtenders = LevelEditorModule.GetAllLevelViewportContextMenuExtenders();
+	LVCMExtenders.Add(FLevelEditorModule::FLevelViewportMenuExtender_SelectedActors::CreateRaw(this, &FEditorExtendModule::LVCMExtender));
+}
+
+TSharedRef<FExtender> FEditorExtendModule::LVCMExtender(const TSharedRef<FUICommandList> CommandList, const TArray<AActor*> Actors)
+{
+	FLevelEditorModule& LevelEditorModule = FModuleManager::LoadModuleChecked<FLevelEditorModule>("LevelEditor");
+	TSharedPtr<FExtender> Extender = MakeShareable(new FExtender());
+	Extender->AddMenuExtension("ActorAsset", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddSubMenus));
+	return Extender.ToSharedRef();
 }
 
 void FEditorExtendModule::ShutdownModule()
@@ -68,6 +90,11 @@ void FEditorExtendModule::AddMenuBarExtension(FMenuBarBuilder& Builder)
 		LOCTEXT("PullMenu Tips", "Advanced Menu Tips"),
 		FNewMenuDelegate::CreateRaw(this, &FEditorExtendModule::MenuBarPullDown)
 	);
+}
+
+void FEditorExtendModule::AddToolBarExtension(FToolBarBuilder& ToolBarBuilder)
+{
+	FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("This is toolBar"));
 }
 
 //void FEditorExtendModule::MenuBarPullDown(FMenuBuilder& Builder)
@@ -137,6 +164,36 @@ void FEditorExtendModule::LOG_Warning_Action_1()
 void FEditorExtendModule::LOG_Warning_Action_2()
 {
 	FMessageDialog::Open(EAppMsgType::Ok, FText::FromString("LOG_Warning_Action_2"));
+}
+
+// ToolMenu创建ToolBarMenu
+void FEditorExtendModule::RegisterMenus()
+{
+	// TODO：不懂这里为什么分号之后还有大括号？
+	// Owner will be used for cleanup in call to UToolMenus::UnregisterOwner
+	// 注册当前类作为当前Menu的所有者，作用是保证在Unregister的时候自动销毁
+	FToolMenuOwnerScoped OwnerScoped(this);
+	{
+		UToolMenu* Menu = UToolMenus::Get()->ExtendMenu("LevelEditor.MainMenu.Help");		// LevelEditor下的 Help 菜单
+		{
+			// 查找Section，如果不存在即创建
+			FToolMenuSection& Section = Menu->FindOrAddSection("HelpResources");
+			Section.AddMenuEntryWithCommandList(FEditorExtendCommands::Get().Action1, PluginCommands);
+		}
+	}
+
+	// 顶部播放位置的工具栏
+	{
+		UToolMenu* ToolbarMenu = UToolMenus::Get()->ExtendMenu("LevelEditor.LevelEditorToolBar.PlayToolBar");		// TODO:像这种名称如何查看？
+		{
+			FToolMenuSection& Section = ToolbarMenu->FindOrAddSection("L_Section");
+			{
+				FToolMenuEntry& Entry = Section.AddEntry(FToolMenuEntry::InitToolBarButton(FEditorExtendCommands::Get().Action2));
+				Entry.Icon = FSlateIcon(FAppStyle::GetAppStyleSetName(),"Icons.Save");
+				Entry.SetCommandList(PluginCommands);
+			}
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

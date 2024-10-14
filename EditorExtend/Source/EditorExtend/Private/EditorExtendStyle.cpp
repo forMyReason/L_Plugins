@@ -24,6 +24,7 @@ void FEditorExtendStyle::Initialize()
 }
 
 const FVector2D Icon16x16(16.0f, 16.0f);
+const FVector2D Icon20x20(20.0f, 20.0f);
 const FVector2D Icon40x40(40.0f, 40.0f);
 
 TSharedRef< FSlateStyleSet > FEditorExtendStyle::Create()
@@ -33,6 +34,8 @@ TSharedRef< FSlateStyleSet > FEditorExtendStyle::Create()
 	Style->SetContentRoot(IPluginManager::Get().FindPlugin("EditorExtend")->GetBaseDir() / TEXT("Resources"));		// 图标位于Resource文件夹下面
 
 	// 注册图标（大图标和小图标）：Action1、Action2
+	// TODO:PNG / SVG Icon
+	// TODO：为啥这里没出现ToolBar的图标？
 	Style->Set("EditorExtendStyle.Action1", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon40x40));
 	Style->Set("EditorExtendStyle.Action1.Small", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon16x16));	// 指定图标的大小
 	Style->Set("EditorExtendStyle.Action2", new IMAGE_BRUSH_SVG(TEXT("PlaceholderButtonIcon"), Icon40x40));
