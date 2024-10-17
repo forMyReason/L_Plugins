@@ -88,5 +88,15 @@ void FMyStructCustomization::CustomizeChildren(TSharedRef<IPropertyHandle> Prope
 			[SuffixPropertyHandle->CreatePropertyValueWidget()]
 		]
 	];
+
+	ChildBuilder.AddCustomRow(FText())
+	[
+		SNew(SHorizontalBox)
+		// 禁用输入
+		.IsEnabled(false)
+		+ SHorizontalBox::Slot()
+
+		//...
+	];
 	// UE_LOG(LogTemp, Warning, TEXT("%s - The children customization is called"), ANSI_TO_TCHAR(__FU  NCTION__));
 }

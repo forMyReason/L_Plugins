@@ -8,6 +8,7 @@
 #include "Modules/ModuleManager.h"
 #include "Components/StaticMeshComponent.h"
 #include "ToolMenus.h"
+#include "ContentBrowserModule.h"
 
 #define LOCTEXT_NAMESPACE "FEditorExtendModule"
 
@@ -45,14 +46,14 @@ void FEditorExtendModule::StartupModule()
 		})
 	);
 
-	// MenuBarExtender
+// MenuBarExtender
 	TSharedPtr<FExtender> MenuBarExtender = MakeShareable(new FExtender());
 	MenuBarExtender->AddMenuBarExtension("Help", EExtensionHook::After, PluginCommands, FMenuBarExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddMenuBarExtension));
 	// 创建了一个委托实例，用于相应添加菜单扩展的请求
 	// this：指向当前FEditorExtendModule实例的指针
 	// &FEditorExtendModule::AddMenuBarExtension：指向成员函数的指针，用于相应菜单扩展
 
-	// ToolBarExtender
+// ToolBarExtender
 	// TODO：这里的代码没有跑通，所以对于ToolBarMenu，可采用UToolMenu / 新建EditorToolBarButton插件来创建
 	// TSharedPtr<FExtender> ToolBarExtender = MakeShareable(new FExtender());
 	// ToolBarExtender->AddToolBarExtension("File",EExtensionHook::Before,PluginCommands,FToolBarExtensionDelegate::CreateRaw(this,&FEditorExtendModule::AddToolBarExtension));
@@ -64,9 +65,30 @@ void FEditorExtendModule::StartupModule()
 	LevelEditorModule.GetMenuExtensibilityManager()->AddExtender(MenuExtender);
 
 	
-	// Outline和viewport右键菜单拓展
+// Outline和viewport右键菜单扩展
 	auto& LVCMExtenders = LevelEditorModule.GetAllLevelViewportContextMenuExtenders();
 	LVCMExtenders.Add(FLevelEditorModule::FLevelViewportMenuExtender_SelectedActors::CreateRaw(this, &FEditorExtendModule::LVCMExtender));
+	
+// Content Browser右键菜单扩展
+	FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+	auto& ACMExtenders = ContentBrowserModule.GetAllAssetContextMenuExtenders();
+	ACMExtenders.Add(FContentBrowserMenuExtender_SelectedPaths::CreateRaw(this,&FEditorExtendModule::ACMExtender));
+
+// 选中资源菜单
+	auto& AVCMExtender = ContentBrowserModule.GetAllAssetViewContextMenuExtenders();
+	AVCMExtender.Add(FContentBrowserMenuExtender_SelectedAssets::CreateRaw(this, &FEditorExtendModule::AVCMExtender));
+	//参数是选中的资源列表，后边不再赘述委托方法，参数可以参考委托声明
+
+// TODO：在ViewOption中添加一个Viewport的UI拓展项
+	auto& AVVMExtenders = ContentBrowserModule.GetAllAssetViewViewMenuExtenders();
+
+// TODO：Collection面板选中Tag菜单
+	auto& CCMExtenders = ContentBrowserModule.GetAllCollectionListContextMenuExtenders();
+
+// TODO：ContentBrowser目录文件夹
+	auto& PVCMExtenders = ContentBrowserModule.GetAllPathViewContextMenuExtenders();
+
+	
 }
 
 TSharedRef<FExtender> FEditorExtendModule::LVCMExtender(const TSharedRef<FUICommandList> CommandList, const TArray<AActor*> Actors)
@@ -76,6 +98,39 @@ TSharedRef<FExtender> FEditorExtendModule::LVCMExtender(const TSharedRef<FUIComm
 	Extender->AddMenuExtension("ActorAsset", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddSubMenus));
 	return Extender.ToSharedRef();
 }
+
+TSharedRef<FExtender> FEditorExtendModule::ACMExtender(const TArray<FString>& Paths)
+{
+	TSharedPtr<FExtender> Extender = MakeShareable(new FExtender());
+	Extender->AddMenuExtension("ContentBrowserNewAdvancedAsset", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddContentMenuExtension));
+	return Extender.ToSharedRef();
+}
+
+TSharedRef<FExtender> FEditorExtendModule::AVCMExtender(const TArray<FAssetData>& AssetData)
+{
+	TSharedPtr<FExtender> Extender = MakeShareable(new FExtender());
+	FContentBrowserModule& ContentBrowserModule = FModuleManager::LoadModuleChecked<FContentBrowserModule>("ContentBrowser");
+	// TODO:这里的assetcode是啥？
+	Extender->AddMenuExtension("AssetCode", EExtensionHook::After, PluginCommands, FMenuExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddContentMenuExtension));
+	return Extender.ToSharedRef();
+}
+
+TShaderRef<FExtender> FEditorExtendModule::OnExtendContentBrowserAssetSelectionMenu(const TArray<FAssetData>& SelectedAssets)
+{
+	TShaderRef<FExtender> Extender;
+	return Extender;
+}
+
+// static void CreateSpriteActionsSubMenu(FMenuBuilder& MenuBuilder, TArray<FAssetData> SelectedAssets)
+// {
+// 	MenuBuilder.AddSubMenu(
+// 		LOCTEXT("SpriteActionsSubMenuLabel", "Sprite Actions"),
+// 		LOCTEXT("SpriteActionsSubMenuToolTip", "Sprite-related actions for this texture."),
+// 		FNewMenuDelegate::CreateStatic(&FPaperContentBrowserExtensions_Impl::PopulateSpriteActionsMenu, SelectedAssets),
+// 		false,
+// 		FSlateIcon(FEditorStyle::GetStyleSetName(), "ClassIcon.PaperSprite")
+// 	);
+// }
 
 void FEditorExtendModule::ShutdownModule()
 {
@@ -90,6 +145,22 @@ void FEditorExtendModule::AddMenuBarExtension(FMenuBarBuilder& Builder)
 		LOCTEXT("PullMenu Tips", "Advanced Menu Tips"),
 		FNewMenuDelegate::CreateRaw(this, &FEditorExtendModule::MenuBarPullDown)
 	);
+}
+
+void FEditorExtendModule::AddContentMenuExtension(FMenuBuilder& Builder)
+{
+	// 第一个参数是分隔栏的Hook名，第二参数是分隔栏的显示名称
+	// 需要注意ExtensionHook的位置，有些位置是无法添加Section的
+	Builder.BeginSection("CustomContentSection", LOCTEXT("CustomContentArea", "CustomContentArea"));
+	Builder.AddMenuEntry(
+		FText::FromString("SubMenu"),
+		FText::FromString("This is SubMenus"),
+		FSlateIcon(),
+		FUIAction(FExecuteAction::CreateRaw(this, &FEditorExtendModule::MenuCallback))
+	);
+	//创建简单的分割线
+	Builder.AddMenuSeparator("SeparatorHook_Name");
+	Builder.EndSection();
 }
 
 void FEditorExtendModule::AddToolBarExtension(FToolBarBuilder& ToolBarBuilder)
