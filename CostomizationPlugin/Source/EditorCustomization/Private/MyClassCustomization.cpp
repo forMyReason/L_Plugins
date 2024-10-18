@@ -11,6 +11,7 @@ TSharedRef<IDetailCustomization> FMyClassCustomization::MakeInstance()
 
 void FMyClassCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder)
 {
+/*
 /////////////////////// Section 1 ///////////////////////
 	// 获取类别句柄
 	TSharedPtr<IPropertyHandle> SumPropertyHandle = DetailBuilder.GetProperty((GET_MEMBER_NAME_CHECKED(AMyClass,Sum)));
@@ -21,20 +22,19 @@ void FMyClassCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 	Category_1.AddProperty(SumPropertyHandle);
 	
 	// 通过获取句柄，以此对相应的属性作基础调整
-	DetailBuilder.HideProperty(APropertyHandle);
-
-/*
-	// 隐藏一个属性
-	DetailBuilder.HideProperty(Prop);
-
-	// 隐藏一个类别
-	DetailBuilder.HideCategory(TEXT("NewCategory"));
-
-	// 将一个属性移动到一个类别中
-	NewCat.AddProperty(Prop);
+	// DetailBuilder.HideProperty(APropertyHandle);
 */
 
-/*
+	// // 隐藏一个属性
+	// DetailBuilder.HideProperty(Prop);
+	//
+	// // 隐藏一个类别
+	// DetailBuilder.HideCategory(TEXT("NewCategory"));
+	//
+	// // 将一个属性移动到一个类别中
+	// NewCat.AddProperty(Prop);
+
+/*	
 /////////////////////// Section 2 ///////////////////////
 // 场景中放入多个BP_MyClass并同时选中，在细节面板的“NewCategory”下只会显示第一个被选中的Actor名称。
 	// 从DetailBuilder获取弱指针. TODO:弱指针是啥？
@@ -52,22 +52,49 @@ void FMyClassCustomization::CustomizeDetails(IDetailLayoutBuilder& DetailBuilder
 		.Text(FText::FromName(MyObject->GetFName()))
 	];
 */
-
 /////////////////////// Section 3 - 实现自定义UI逻辑 ///////////////////////
+
+	TArray<TWeakObjectPtr<UObject>> Objects;
+	DetailBuilder.GetObjectsBeingCustomized(Objects);
+
+	if(Objects.Num() != 1)
+	{
+		return;
+	}
+	TWeakObjectPtr<AMyClass> MyObjcet = Cast<AMyClass>(Objects[0].Get());
+	
+	IDetailCategoryBuilder& AddItems = DetailBuilder.EditCategory(TEXT("Add Items"));
+	TSharedPtr<IPropertyHandle> APropertyHandle = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(AMyClass, A));
+	TSharedPtr<IPropertyHandle> BPropertyHandle = DetailBuilder.GetProperty(GET_MEMBER_NAME_CHECKED(AMyClass, B));
+
+	// 通过简单的lambda代理实现运算
+	// TODO:lambda代理运算是啥东西？
+	auto OnPropertyChanged = [=]{MyObjcet->Sum = MyObjcet->A + MyObjcet->B;};
+	APropertyHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateLambda(OnPropertyChanged));
+	BPropertyHandle->SetOnPropertyValueChanged(FSimpleDelegate::CreateLambda(OnPropertyChanged));
+	
+	// 等同于DetailBuilder.HideProperty(APropertyHandle);
+	APropertyHandle->MarkHiddenByCustomization();
+	BPropertyHandle->MarkHiddenByCustomization();
+	AddItems
+	.AddCustomRow(FText())
+	[
+		SNew(SHorizontalBox)
+		+ SHorizontalBox::Slot()
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			[APropertyHandle->CreatePropertyNameWidget()]
+			+ SVerticalBox::Slot()
+			[APropertyHandle->CreatePropertyValueWidget()]
+		]
+		+ SHorizontalBox::Slot()
+		[
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			[BPropertyHandle->CreatePropertyNameWidget()]
+			+ SVerticalBox::Slot()
+			[BPropertyHandle->CreatePropertyValueWidget()]
+		]
+	];
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
