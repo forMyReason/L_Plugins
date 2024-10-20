@@ -23,11 +23,12 @@ void FEditorExtendModule::StartupModule()
 
 	UToolMenus::RegisterStartupCallback(FSimpleMulticastDelegate::FDelegate::CreateRaw(this,&FEditorExtendModule::RegisterMenus));
 
-	// MenuExtender
+// MenuExtender
 	TSharedPtr<FExtender> MenuExtender = MakeShareable(new FExtender());
 	MenuExtender->AddMenuExtension("LevelEditor", EExtensionHook::After, NULL, FMenuExtensionDelegate::CreateLambda([this](FMenuBuilder& Builder)
 		{
 			//第一个参数是分隔栏的Hook名，第二参数是分隔栏的显示名称
+			// TODO:LOCTEXT是什么？
 			Builder.BeginSection("CustomSection", LOCTEXT("CustomArea", "CustomArea"));
 			Builder.AddMenuEntry(
 				FText::FromString("Menu1"),
@@ -87,8 +88,6 @@ void FEditorExtendModule::StartupModule()
 
 // TODO：ContentBrowser目录文件夹
 	auto& PVCMExtenders = ContentBrowserModule.GetAllPathViewContextMenuExtenders();
-
-	
 }
 
 TSharedRef<FExtender> FEditorExtendModule::LVCMExtender(const TSharedRef<FUICommandList> CommandList, const TArray<AActor*> Actors)

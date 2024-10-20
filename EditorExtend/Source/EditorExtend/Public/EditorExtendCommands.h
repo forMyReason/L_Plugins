@@ -23,7 +23,6 @@ public:
     virtual void RegisterCommands() override;
 
 public:
-	// TODO: copilot的操作，ctrl+->，ctrl+<-？？？？？
     //指令Action1、Action2
 	TSharedPtr<FUICommandInfo> Action1;     // 智能指针：指向FUICommandInfo类型对象
     TSharedPtr<FUICommandInfo> Action2;

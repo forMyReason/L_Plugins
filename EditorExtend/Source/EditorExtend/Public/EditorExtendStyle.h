@@ -20,14 +20,8 @@ public:
 	static FName GetStyleSetName();
 	
 	static TSharedPtr<class FSlateStyleSet> GetStyleSet();
-	
-
 
 private:
-
 	static TSharedRef< class FSlateStyleSet > Create();
-
-private:
-
 	static TSharedPtr< class FSlateStyleSet > StyleInstance;
 };
