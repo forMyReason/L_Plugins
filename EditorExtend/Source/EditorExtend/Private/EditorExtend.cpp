@@ -50,6 +50,7 @@ void FEditorExtendModule::StartupModule()
 // MenuBarExtender
 	TSharedPtr<FExtender> MenuBarExtender = MakeShareable(new FExtender());
 	MenuBarExtender->AddMenuBarExtension("Help", EExtensionHook::After, PluginCommands, FMenuBarExtensionDelegate::CreateRaw(this, &FEditorExtendModule::AddMenuBarExtension));
+	// TODO:我想知道传入的UICommandList和后面的委托delegate的方法之间有什么区别和关系？
 	// 创建了一个委托实例，用于相应添加菜单扩展的请求
 	// this：指向当前FEditorExtendModule实例的指针
 	// &FEditorExtendModule::AddMenuBarExtension：指向成员函数的指针，用于相应菜单扩展
